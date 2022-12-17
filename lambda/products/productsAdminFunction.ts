@@ -1,7 +1,7 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from "aws-lambda"
-import { Product, ProductRepository } from "/opt/nodejs/productsLayer"
+import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from "aws-lambda";
+import { Product, ProductRepository } from "/opt/nodejs/productsLayer";
 import { DynamoDB, Lambda } from "aws-sdk"
-import { ProductEvent, ProductEventType } from "/opt/nodejs/productEventsLayer"
+import { ProductEvent, ProductEventType } from "/opt/nodejs/productEventsLayer";
 import * as AWSXRay from "aws-xray-sdk"
 
 AWSXRay.captureAWS(require("aws-sdk"))
@@ -27,7 +27,9 @@ export async function handler(event: APIGatewayProxyEvent,
       const product = JSON.parse(event.body!) as Product
       const productCreated = await productRepository.create(product)
 
-      const response = await sendProductEvent(productCreated, ProductEventType.CREATED, "matilde@siecola.com.br", lambdaRequestId)
+      const response = await sendProductEvent(productCreated, 
+         ProductEventType.CREATED,
+         "matilde@siecola.com.br", lambdaRequestId)
       console.log(response)
 
       return {
@@ -42,9 +44,11 @@ export async function handler(event: APIGatewayProxyEvent,
          try {
             const productUpdated = await productRepository.updateProduct(productId, product)
 
-            const response = await sendProductEvent(productUpdated, ProductEventType.UPDATED, "doralice@siecola.com.br", lambdaRequestId)
+            const response = await sendProductEvent(productUpdated, 
+               ProductEventType.UPDATED,
+               "doralice@siecola.com.br", lambdaRequestId)
             console.log(response)
-
+      
             return {
                statusCode: 200,
                body: JSON.stringify(productUpdated)
@@ -60,7 +64,9 @@ export async function handler(event: APIGatewayProxyEvent,
          try {
             const product = await productRepository.deleteProduct(productId)
 
-            const response = await sendProductEvent(product, ProductEventType.DELETED, "hannah@siecola.com.br", lambdaRequestId)
+            const response = await sendProductEvent(product, 
+               ProductEventType.DELETED,
+               "hannah@siecola.com.br", lambdaRequestId)
             console.log(response)
 
             return {
@@ -83,10 +89,13 @@ export async function handler(event: APIGatewayProxyEvent,
    }
 }
 
-function sendProductEvent(product: Product, eventType: ProductEventType, email: string, lambdaRequestId: string) {
+function sendProductEvent(product: Product, 
+   eventType: ProductEventType, email: string, 
+   lambdaRequestId: string) {
+
    const event: ProductEvent = {
-      email,
-      eventType,
+      email: email,
+      eventType: eventType,
       productCode: product.code,
       productId: product.id,
       productPrice: product.price,
@@ -96,6 +105,6 @@ function sendProductEvent(product: Product, eventType: ProductEventType, email: 
    return lambdaClient.invoke({
       FunctionName: productEventsFunctionName,
       Payload: JSON.stringify(event),
-      InvocationType: "RequestResponse"
+      InvocationType: "Event"
    }).promise()
 }
