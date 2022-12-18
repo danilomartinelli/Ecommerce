@@ -153,10 +153,10 @@ export class OrdersAppStack extends cdk.Stack {
       })
 
       const orderEventsQueue = new sqs.Queue(this, "OrderEventsQueue", {
-         queueName: 'order-events',
+         queueName: "order-events",
          deadLetterQueue: {
             maxReceiveCount: 3,
-            queue: orderEventsDlq,
+            queue: orderEventsDlq
          }
       })
       ordersTopic.addSubscription(new subs.SqsSubscription(orderEventsQueue, {
@@ -176,16 +176,16 @@ export class OrdersAppStack extends cdk.Stack {
          bundling: {
             minify: true,
             sourceMap: false               
-         },
+         },            
          layers: [orderEventsLayer],
          tracing: lambda.Tracing.ACTIVE,
          insightsVersion: lambda.LambdaInsightsVersion.VERSION_1_0_119_0
       })
-      orderEmailsHandler.addEventSource(new lambdaEventSource.SqsEventSource(orderEventsQueue, {
+      orderEmailsHandler.addEventSource(new lambdaEventSource.SqsEventSource(orderEventsQueue/*, {
          batchSize: 5,
          enabled: true,
          maxBatchingWindow: cdk.Duration.minutes(1)
-      }))
+      }*/))
       orderEventsQueue.grantConsumeMessages(orderEmailsHandler)
    }
 }
